@@ -2,14 +2,27 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import IsAuthenticatedOrReadOnly,IsAuthenticated, BasePermission,IsAdminUser
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import (
+    IsAuthenticatedOrReadOnly,
+    BasePermission,
+    IsAdminUser,
+    IsAuthenticated,
+)
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth import logout
 from rest_framework.generics import DestroyAPIView
-from .models import UserProfile,Post
-from .serializers import RegisterSerializer, LoginSerializer, UserProfileSerializer,PostSerializer,AllUserProfileSerializer
+from .models import UserProfile, Post
+from .serializers import (
+    RegisterSerializer,
+    LoginSerializer,
+    UserProfileSerializer,
+    PostSerializer,
+    AllUserProfileSerializer,
+)
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.exceptions import PermissionDenied,AuthenticationFailed
+from rest_framework.exceptions import PermissionDenied, AuthenticationFailed
+from rest_framework import permissions
 
 
 class RegisterView(APIView):
@@ -33,6 +46,7 @@ class RegisterView(APIView):
                 return Response(response_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
@@ -40,16 +54,17 @@ class LoginView(APIView):
             user = serializer.validated_data["user"]
             token = RefreshToken.for_user(user)
             # Set custom claim "is_admin" in the token payload
-            token.payload['is_admin'] = user.is_admin
+            token.payload["is_admin"] = user.is_admin
+            token.payload["is_writer"] = user.is_writer
             response_data = {
                 "refresh": str(token),
                 "access": str(token.access_token),
                 "admin": user.is_admin,
+                "is_writer": user.is_writer,
                 "id": user.id,
             }
             return Response(response_data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class UserProfileListView(APIView):
@@ -65,7 +80,9 @@ class UserProfileListView(APIView):
                 return Response(serializer.data)
             else:
                 # Regular user token, raise Forbidden error
-                raise PermissionDenied("You are not authorized to access this resource.")
+                raise PermissionDenied(
+                    "You are not authorized to access this resource."
+                )
         else:
             # User is not authenticated
             # Handle accordingly
@@ -73,18 +90,29 @@ class UserProfileListView(APIView):
             raise AuthenticationFailed("Authentication credentials were not provided.")
 
 
+class IsAdminOrOwner(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return request.user.is_authenticated and (
+            request.user.is_admin or obj == request.user
+        )
+
 
 class UserProfileDetail(generics.RetrieveUpdateDestroyAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAdminOrOwner]
+
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
 
     def get(self, request, *args, **kwargs):
         instance = self.get_object()
+        self.check_object_permissions(request, instance)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
     def patch(self, request, *args, **kwargs):
         instance = self.get_object()
+        self.check_object_permissions(request, instance)
         serializer = self.get_serializer(instance, data=request.data, partial=True)
 
         if serializer.is_valid():
@@ -95,27 +123,69 @@ class UserProfileDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
+        self.check_object_permissions(request, instance)
         serializer = self.get_serializer(instance)
         serializer.delete(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class IsWriterOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True  # Allow read-only operations for all users
+        return request.user.is_writer  # Allow write operations only for writers
 
 
 class PostList(generics.ListCreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsWriterOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+
+class IsAdminOrOwnerOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return (
+                request.method in permissions.SAFE_METHODS
+            )  # Allow read-only operations for unauthenticated users
+        return True  # Allow authenticated users for all methods
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True  # Allow read-only operations for all users
+        if not request.user.is_authenticated:
+            return False  # Disallow write operations for unauthenticated users
+        if request.user.is_superuser:
+            return True  # Allow admin users for all methods
+        return obj.author == request.user  # Allow the owner of the post for all methods
 
 
 class PostDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrOwnerOrReadOnly]
+
 
 class PostDeleteView(DestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def logout(request):
+    refresh_token = request.data.get("refresh_token")
+
+    if refresh_token:
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()  # Blacklist the refresh token to prevent future use
+        except Exception as e:
+            return Response({"error": "Invalid refresh token."}, status=400)
+
+    return Response({"detail": "Successfully logged out."})
