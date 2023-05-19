@@ -72,12 +72,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'is_writer',
             'profilepic'
         ]
-        read_only_fields = ["id",'is_writer']
+        read_only_fields = ["id"]
 
-    def patch(self, instance, validated_data):
+    def update(self, instance, validated_data):
         # Update the UserProfile instance with the validated data
         instance.email = validated_data.get("email", instance.email)
         instance.username = validated_data.get("username", instance.username)
+        instance.is_writer = validated_data.get("is_writer", instance.is_writer)
+        instance.first_name = validated_data.get("first_name", instance.first_name)
+        instance.last_name = validated_data.get("last_name", instance.last_name)
+        instance.profilepic = validated_data.get("profilepic", instance.profilepic)
         instance.save()
         return instance
 
