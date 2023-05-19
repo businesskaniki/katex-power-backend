@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
+# from cors import CorsMiddleware
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -48,20 +50,20 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',    
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    # list of domains that are allowed to make cross-origin requests to your server
     'http://localhost:3000',
 ]
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'katex.urls'
 
@@ -89,8 +91,12 @@ WSGI_APPLICATION = 'katex.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'katexbackend',
+        'USER': 'katexpower',
+        'PASSWORD': '!KatexPower321',
+        'HOST': '127.0.0.1',  # Use 'localhost' if running locally
+        'PORT': '5432',  # Default port is 5432
     }
 }
 
@@ -132,6 +138,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

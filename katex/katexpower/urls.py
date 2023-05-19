@@ -3,16 +3,19 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import RegisterView, LoginView, UserProfileDetail,PostDetail,PostList
+from .views import RegisterView, LoginView, UserProfileDetail,PostDetail,PostList,PostDeleteView,UserProfileListView
+
+
 # from rest_framework_simplejwt.views import t/
 
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
     path("login/", LoginView.as_view(), name="login"),
-    # path("logout/", LogoutView.as_view(), name="logout"),?
+    path('user-profiles/', UserProfileListView.as_view(), name='user-profiles'),
     path('posts/', PostList.as_view(), name='post-list'),
-    path('posts/<int:pk>/', PostDetail.as_view(), name='post-detail'),
-    path("profiles/<int:pk>/", UserProfileDetail.as_view(), name="user_profile_detail"),
+    path('posts/<str:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
+    path('posts/<str:pk>/', PostDetail.as_view(), name='post-detail'),
+    path("profiles/<str:pk>/", UserProfileDetail.as_view(), name="user_profile_detail"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path(
         "password_change/",
@@ -51,6 +54,6 @@ urlpatterns = [
         name="password_reset_complete",
     ),
 ]
-
 if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

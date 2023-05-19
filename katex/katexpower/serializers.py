@@ -6,31 +6,32 @@ from .models import UserProfile,Post
 User = get_user_model()
 
 
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(
-        write_only=True, required=True, validators=[validate_password]
-    )
-    password2 = serializers.CharField(write_only=True, required=True)
-
+class AllUserProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ("email", "username", "password", "password2")
+        model = UserProfile
+        fields = ['id', 'email', 'username', 'first_name', 'last_name', 'profilepic', 'is_writer', 'is_admin', 'is_staff', 'is_superuser', 'is_active']
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
+    # profilepic = serializers.ImageField(required=True)
+    class Meta:
+        model = UserProfile
+        fields = ['email', 'username', 'first_name', 'last_name', 'password']
         extra_kwargs = {
-            "username": {"required": True},
-            "email": {"required": True},
+            'email': {'required': True},
+            'username': {'required': True},
+            'first_name': {'required': True},
+            'last_name': {'required': True},
         }
 
-    def validate(self, attrs):
-        if attrs["password"] != attrs["password2"]:
-            raise serializers.ValidationError(
-                {"password": "Password fields didn't match."}
-            )
-
-        return attrs
-
     def create(self, validated_data):
-        validated_data.pop("password2")
-        user = User.objects.create_user(**validated_data)
+        user = UserProfile.objects.create(
+            email=validated_data['email'],
+            username=validated_data['username'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+        )
+        user.set_password(validated_data['password'])
+        user.save()
         return user
 
 
@@ -65,9 +66,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "email",
-            "username",
+            'username',
+            'first_name',
+            'last_name',
+            'is_writer',
+            'profilepic'
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id",'is_writer']
 
     def patch(self, instance, validated_data):
         # Update the UserProfile instance with the validated data
@@ -82,9 +87,21 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
+    author_username = serializers.CharField(source='author.username', read_only=True)
+    author_first_name = serializers.CharField(source='author.first_name', read_only=True)
+    author_last_name = serializers.CharField(source='author.last_name', read_only=True)
+    author_picture = serializers.ImageField(source='author.profilepic', read_only=True)
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Post
-        fields = ['id', 'title', 'content', 'created_at']
+        fields = ['author_username', 'author_first_name', 'image', 'author_last_name', 'author_picture', 'image_url', 'id', 'title', 'content', 'created_at']
+
+    def get_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.image:
+            return request.build_absolute_uri(obj.image.url)
+        return None
 
     def create(self, validated_data):
         validated_data['author'] = self.context['request'].user
@@ -94,5 +111,9 @@ class PostSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
         instance.content = validated_data.get('content', instance.content)
+        instance.image = validated_data.get('image', instance.image)
         instance.save()
         return instance
+
+    def delete(self, instance):
+        instance.delete()

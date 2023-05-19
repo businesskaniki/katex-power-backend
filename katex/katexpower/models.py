@@ -1,4 +1,5 @@
 from django.db import models
+import uuid
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 
@@ -42,9 +43,13 @@ def defualt_profile_frame():
 
 
 class UserProfile(AbstractBaseUser):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True, max_length=200, verbose_name="email")
     username = models.CharField(max_length=255, unique=True)
-    # some important field
+    first_name = models.CharField(max_length=200,null=True)
+    last_name = models.CharField(max_length=200,null=True)
+    profilepic = models.ImageField(upload_to='profiles/', null=True, blank= True, default="profiles/defualt.png")
+    is_writer = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
@@ -71,10 +76,33 @@ class UserProfile(AbstractBaseUser):
 
 
 class Post(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
+    image = models.ImageField(upload_to='blogs/', null=True, blank= True)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
+
+    @property
+    def author_username(self):
+        return self.author.username
+
+    @property
+    def author_first_name(self):
+        return self.author.first_name
+
+    @property
+    def author_last_name(self):
+        return self.author.last_name
+    
+    @property
+    def author_picture(self):
+        return self.author.profilepic
+   
+
+    @property
+    def is_writer(self):
+        return self.author.is_writer
