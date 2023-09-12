@@ -2,15 +2,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import (
-    IsAuthenticatedOrReadOnly,
     BasePermission,
     IsAdminUser,
     IsAuthenticated,
 )
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from django.contrib.auth import logout
 from rest_framework.generics import DestroyAPIView
 from .models import UserProfile, Post
 from .serializers import (
@@ -23,6 +20,7 @@ from .serializers import (
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import PermissionDenied, AuthenticationFailed
 from rest_framework import permissions
+from rest_framework.authentication import TokenAuthentication
 
 
 class RegisterView(APIView):
@@ -116,10 +114,18 @@ class UserProfileDetail(generics.RetrieveUpdateDestroyAPIView):
         serializer = self.get_serializer(instance, data=request.data, partial=True)
 
         if serializer.is_valid():
+            if not request.user.is_admin:
+                # Remove is_writer from the serializer's validated data if the user is not an admin
+                serializer.validated_data.pop('is_writer', None)
+                serializer.validated_data.pop('is_admin', None)
+                serializer.validated_data.pop('is_staff', None)
+                serializer.validated_data.pop('is_superuser', None)
+
             serializer.save()
             return Response(serializer.data)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -176,16 +182,14 @@ class PostDeleteView(DestroyAPIView):
     serializer_class = PostSerializer
 
 
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def logout(request):
-    refresh_token = request.data.get("refresh_token")
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    if refresh_token:
+    def post(self, request):
         try:
+            refresh_token = request.data["refresh_token"]
             token = RefreshToken(refresh_token)
-            token.blacklist()  # Blacklist the refresh token to prevent future use
+            token.blacklist()
+            return Response({"message": "Successfully logged out."}, status=204)
         except Exception as e:
-            return Response({"error": "Invalid refresh token."}, status=400)
-
-    return Response({"detail": "Successfully logged out."})
+            return Response({"error": str(e)}, status=400)

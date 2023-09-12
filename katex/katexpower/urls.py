@@ -11,7 +11,7 @@ from .views import (
     PostList,
     PostDeleteView,
     UserProfileListView,
-    logout
+    LogoutView
 )
 
 
@@ -20,7 +20,7 @@ from .views import (
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
     path("login/", LoginView.as_view(), name="login"),
-    path("logout/", logout,name="logout"),
+    path("logout/", LogoutView.as_view(),name="logout"),
     path("user-profiles/", UserProfileListView.as_view(), name="user-profiles"),
     path("posts/", PostList.as_view(), name="post-list"),
     path("posts/<str:pk>/delete/", PostDeleteView.as_view(), name="post-delete"),

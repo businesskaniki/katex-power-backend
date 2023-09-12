@@ -75,19 +75,34 @@ class UserProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
     def update(self, instance, validated_data):
+        # Check if the user making the request is an admin
+        is_admin = self.context['request'].user.is_admin
+
+        if not is_admin:
+            # Owner is making the request
+            validated_data.pop('is_writer', None)
+            validated_data.pop('is_admin', None)
+            validated_data.pop('is_staff', None)
+            validated_data.pop('is_superuser', None)
+              # Remove 'is_writer' from validated_data
+
         # Update the UserProfile instance with the validated data
         instance.email = validated_data.get("email", instance.email)
         instance.username = validated_data.get("username", instance.username)
-        instance.is_writer = validated_data.get("is_writer", instance.is_writer)
         instance.first_name = validated_data.get("first_name", instance.first_name)
         instance.last_name = validated_data.get("last_name", instance.last_name)
         instance.profilepic = validated_data.get("profilepic", instance.profilepic)
+        
+        if is_admin:
+            instance.is_writer = validated_data.get("is_writer", instance.is_writer)
+            
         instance.save()
         return instance
 
     def delete(self, instance):
         # Delete the UserProfile instance
         instance.delete()
+
 
 
 class PostSerializer(serializers.ModelSerializer):
