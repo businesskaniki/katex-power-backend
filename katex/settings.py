@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # rest framework
     'rest_framework',
-    'rest_framework_swagger',
     # local app
     'katexpower.apps.KatexpowerConfig',
 ]
