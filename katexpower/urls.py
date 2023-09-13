@@ -2,7 +2,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
-from rest_framework_simplejwt.views import TokenRefreshView
+# from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     RegisterView,
     LoginView,
@@ -26,7 +26,7 @@ urlpatterns = [
     path("posts/<str:pk>/delete/", PostDeleteView.as_view(), name="post-delete"),
     path("posts/<str:pk>/", PostDetail.as_view(), name="post-detail"),
     path("profile/<str:pk>/", UserProfileDetail.as_view(), name="user_profile_detail"),
-    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    # path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path(
         "password_change/",
         auth_views.PasswordChangeView.as_view(
