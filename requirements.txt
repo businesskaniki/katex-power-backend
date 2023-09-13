@@ -28,3 +28,4 @@ gunicorn
 dj_database_url
 psycopg2
 django
+ djangorestframework-simplejwt
