@@ -27,5 +27,4 @@ urllib3==1.26.14
 gunicorn
 dj_database_url
 psycopg2
-rest_framework_simplejwt
 django
