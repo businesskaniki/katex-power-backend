@@ -67,7 +67,7 @@ MIDDLEWARE = [
 CORS_ALLOWED_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "https://katexpower.com/",  # Add your frontend domain here
+    "https://katexpower.com",  # Add your frontend domain here
 ]
 
 ROOT_URLCONF = 'katex.urls'
