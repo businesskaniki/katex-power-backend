@@ -10,7 +10,7 @@ python manage.py createsuperuser --noinput --username=kachi2030  --email=kachi@.
 # Start Django shell and execute Python code to create a superuser with a password
 python manage.py shell <<EOF
 from katexpower.models import UserProfile
-user = UserProfile.objects.get(username='reagan')
+user = UserProfile.objects.get(username='kachi2030')
 user.set_password('!Kaniki1234')
 user.save()
 EOF
