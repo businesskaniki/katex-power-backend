@@ -2,9 +2,6 @@ pip install -r requirements.txt
 
 python manage.py migrate
 
-python add_admin.py
-
-
 export DJANGO_SETTINGS_MODULE=your_project.settings
 
 
