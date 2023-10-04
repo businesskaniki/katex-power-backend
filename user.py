@@ -16,4 +16,5 @@ user = UserProfile.objects.get(username="nicholasmaina")
 
 
 # Print the password
+print(f"Username: {user.username}, Email: {user.email}")
 print(user.password)
