@@ -4,7 +4,7 @@ pip install -r requirements.txt
 # Apply database migrations
 python manage.py migrate
 
-python manage.py createsuperuser --noinput --username=reagan123  --email=reagan@gmail123.com
+python manage.py createsuperuser --noinput --username=kachi2030  --email=kachi@.com
 
 
 # Start Django shell and execute Python code to create a superuser with a password
