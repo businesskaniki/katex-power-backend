@@ -7,7 +7,6 @@ python manage.py migrate
 # Start Django shell and execute Python code to create a superuser with a password
 python manage.py shell <<EOF
 from katexpower.models import UserProfile
-
 # Replace these values with your desired username, email, and password
 username = 'nicholaskamu'
 email = 'businesskaniki23@gmail.com'
@@ -15,7 +14,7 @@ password = '!Kaniki1234'
 
 try:
     user = UserProfile.objects.get(username=username)
-except User.DoesNotExist:
+except UserProfile.DoesNotExist:
     user = None
 
 if not UserProfile:
