@@ -2,7 +2,7 @@ pip install -r requirements.txt
 
 python manage.py migrate
 
-export DJANGO_SETTINGS_MODULE=your_project.settings
+export DJANGO_SETTINGS_MODULE=katex.settings
 
 
 python <<EOF
