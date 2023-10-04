@@ -1,5 +1,6 @@
 import os
 import django
+django.setup()
 from django.contrib.auth import authenticate
 from katexpower.models import UserProfile
 
@@ -8,7 +9,7 @@ from katexpower.models import UserProfile
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "katex.settings")
 
 # Initialize Django
-django.setup()
+
 
 # Now you can import and work with Django models
 
