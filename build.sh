@@ -2,6 +2,11 @@ pip install -r requirements.txt
 
 python manage.py migrate
 
+until python -c "import django; django.setup()" 2>/dev/null; do
+  >&2 echo "Waiting for Django to initialize..."
+  sleep 1
+done
+
 export DJANGO_SETTINGS_MODULE=katex.settings
 
 
