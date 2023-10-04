@@ -1,18 +1,16 @@
 import os
 import django
-django.setup()
-from django.contrib.auth import authenticate
-
-
 
 # Set the DJANGO_SETTINGS_MODULE environment variable
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "katex.settings")
 
 # Initialize Django
-
+django.setup()
 
 # Now you can import and work with Django models
 from katexpower.models import UserProfile
+
+from django.contrib.auth import authenticate
 
 # Replace 'nicholasmaina' with the actual username of your superuser
 user = UserProfile.objects.get(username="nicholasmaina")
@@ -25,7 +23,7 @@ print(user.password)
 username = user.email
 password_to_check = user.password
 
-user = authenticate(email=username, password=password_to_check)
+user = authenticate(username=username, password=password_to_check)
 
 if user is not None:
     print("Authentication successful.")
